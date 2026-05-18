@@ -1,14 +1,18 @@
-from django.shortcuts import render, get_object_or_404, redirect  # ДОБАВЛЕН redirect
+# lex/views.py
+from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse
-from django.urls import reverse  # ДОБАВЛЕН reverse
 from .models import Case, PracticeArea, News
 from django.core.paginator import Paginator
+from .forms import NewsForm  # Импорт формы для редактирования новостей
 
 
 # Функция get_categories_context УДАЛЕНА!
 # Категории теперь получаются через теги в шаблонах (lex_tags.py)
 
+# ============================================
 # БАЗОВЫЕ ФУНКЦИИ - ГЛАВНЫЕ СТРАНИЦЫ
+# ============================================
+
 def index(request):
     """
     Главная страница приложения lex.
@@ -21,7 +25,6 @@ def index(request):
     practice_areas_count = PracticeArea.objects.count()
     news_count = News.objects.filter(is_published=True).count()
 
-    # Создаем контекст - категории больше не передаем!
     context = {
         'latest_news': latest_news,
         'cases_count': cases_count,
@@ -52,7 +55,10 @@ def about(request):
     return render(request, 'lex/about.html', context)
 
 
+# ============================================
 # ФУНКЦИИ ДЛЯ НОВОСТЕЙ
+# ============================================
+
 def news_list(request):
     """
     Список всех новостей с пагинацией.
@@ -62,7 +68,7 @@ def news_list(request):
 
     # Пагинация - разбиваем новости на страницы по 6 штук
     paginator = Paginator(news_items, 6)
-    page = request.GET.get('page')  # Получаем номер страницы из URL
+    page = request.GET.get('page')
 
     try:
         news_page = paginator.page(page)
@@ -92,7 +98,6 @@ def news_detail(request, news_id):
     return render(request, 'lex/news_detail.html', context)
 
 
-# ФУНКЦИЯ ДЛЯ КАТЕГОРИЙ (ЛАБ. РАБОТА №7)
 def news_by_category(request, category_id):
     """
     Функция для отображения новостей по категории (области практики).
@@ -116,17 +121,58 @@ def news_by_category(request, category_id):
         news_page = paginator.page(1)
 
     context = {
-        'category': category,  # Передаем саму категорию для отображения названия
+        'category': category,
         'news_list': news_page,
         'news_count': news_items.count(),
-        'title': f'Новости: {category.name}',  # Динамический заголовок
+        'title': f'Новости: {category.name}',
         'paginator': paginator,
-        'active_category': category.id,  # Для подсветки активной категории в сайдбаре
+        'active_category': category.id,
     }
     return render(request, 'lex/category_news.html', context)
 
 
+# ============================================
+# ВАРИАНТ 14: РЕДАКТИРОВАНИЕ НОВОСТИ ЧЕРЕЗ ФОРМУ
+# ============================================
+
+def edit_news(request, news_id):
+    """
+    Функция для редактирования существующей новости.
+    Использует ModelForm для работы с моделью News.
+
+    GET: отображает форму с данными новости
+    POST: обрабатывает отправленную форму и сохраняет изменения
+    """
+    # Получаем новость или возвращаем 404
+    news_item = get_object_or_404(News, id=news_id)
+
+    # Проверяем метод запроса
+    if request.method == 'POST':
+        # POST-запрос: обрабатываем отправленную форму
+        # Передаем request.FILES для загрузки файлов (изображений)
+        form = NewsForm(request.POST, request.FILES, instance=news_item)
+
+        if form.is_valid():
+            # Сохраняем изменения
+            news_item = form.save()
+            # Редирект на страницу новости
+            return redirect('lex:news_detail', news_id=news_item.id)
+    else:
+        # GET-запрос: отображаем форму с текущими данными новости
+        form = NewsForm(instance=news_item)
+
+    context = {
+        'form': form,
+        'news_item': news_item,
+        'title': f'Редактирование: {news_item.title}',
+    }
+    return render(request, 'lex/edit_news.html', context)
+
+
+# ============================================
 # ФУНКЦИИ ДЛЯ СУДЕБНЫХ ДЕЛ
+# ============================================
+
 def case_list(request):
     """
     Список всех судебных дел.
@@ -136,7 +182,6 @@ def case_list(request):
         cases = Case.objects.all()
         practice_areas = PracticeArea.objects.all()
     except:
-        # Если таблицы еще не созданы, показываем предупреждение
         has_models = False
         cases = []
         practice_areas = []
@@ -174,7 +219,10 @@ def practice_areas_list(request):
     return render(request, 'lex/practice_areas.html', context)
 
 
+# ============================================
 # ВРЕМЕННЫЕ ФУНКЦИИ (ЗАГОТОВКИ)
+# ============================================
+
 def add_case(request):
     """
     Заготовка для формы добавления дела.
@@ -206,7 +254,10 @@ def search_cases(request):
     return render(request, 'lex/search_cases.html', context)
 
 
+# ============================================
 # API ФУНКЦИИ (ДЛЯ БУДУЩИХ ЛАБОРАТОРНЫХ)
+# ============================================
+
 def api_case_list(request):
     """
     Простой API для списка дел.
@@ -221,7 +272,10 @@ def api_case_detail(request, case_id):
     return HttpResponse(f'{{"id": {case_id}}}', content_type="application/json")
 
 
+# ============================================
 # ТЕСТОВЫЕ ФУНКЦИИ ИЗ ЛАБОРАТОРНОЙ 6
+# ============================================
+
 def test_bootstrap(request):
     """
     Тестовая страница для проверки компонентов Bootstrap.
@@ -246,48 +300,41 @@ def test_template_tags(request):
     return render(request, 'lex/test_template_tags.html', context)
 
 
+# ============================================
 # ЗАДАНИЕ 7: КАСТОМНАЯ СТРАНИЦА 404
+# ============================================
 
 def custom_404(request, exception):
     """Кастомная страница 404"""
     return render(request, 'lex/404.html', status=404)
 
+
+# ============================================
 # ЗАДАНИЕ 9: ИСПОЛЬЗОВАНИЕ reverse ДЛЯ РЕДИРЕКТА
+# ============================================
 
 def redirect_to_category(request, category_id):
     """
     Перенаправление на страницу категории с помощью reverse.
-    Аргументы:
-        request - объект запроса
-        category_id - ID категории (из URL)
     """
-    # Строим URL с помощью reverse по имени маршрута
+    from django.urls import reverse
     url = reverse('lex:news_by_category', kwargs={'category_id': category_id})
-
-    # Перенаправляем пользователя
     return redirect(url)
 
 
 def redirect_to_news(request, news_id):
     """
     Перенаправление на детальную страницу новости.
-    Аргументы:
-        request - объект запроса
-        news_id - ID новости (из URL)
     """
-    # Строим URL с помощью reverse
+    from django.urls import reverse
     url = reverse('lex:news_detail', kwargs={'news_id': news_id})
-
-    # Перенаправляем
     return redirect(url)
 
 
 def redirect_to_home(request):
     """
-    Перенаправление на главную страницу
-    Возвращает:
-        Редирект на главную страницу Lex
+    Перенаправление на главную страницу.
     """
-    # reverse без параметров
+    from django.urls import reverse
     url = reverse('lex:index')
     return redirect(url)

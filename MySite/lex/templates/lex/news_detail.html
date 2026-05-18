@@ -9,13 +9,33 @@
 {% block content %}
 <div class="row">
     <div class="col-md-12">
+        <!-- Хлебные крошки (breadcrumbs) -->
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="{% url 'lex:index' %}">Главная</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'lex:news_list' %}">Новости</a>
+                </li>
+                {% if news_item.category %}
+                <li class="breadcrumb-item">
+                    <a href="{{ news_item.category.get_absolute_url }}">{{ news_item.category.name }}</a>
+                </li>
+                {% endif %}
+                <li class="breadcrumb-item active" aria-current="page">
+                    {{ news_item.title|truncatechars:50 }}
+                </li>
+            </ol>
+        </nav>
+
+        <!-- Карточка новости -->
         <div class="card mb-4">
             <div class="card-body">
                 <!-- Мета-информация -->
                 <div class="row mb-4">
                     <div class="col-md-6">
                         <p class="text-muted">
-                            <i class="bi bi-calendar"></i>
                             <strong>Дата публикации:</strong>
                             {{ news_item.created_at|date:"d.m.Y в H:i" }}
                         </p>
@@ -31,7 +51,7 @@
                     </div>
                 </div>
 
-                <!-- Категория (ИЗМЕНЕНО: используем get_absolute_url) -->
+                <!-- Категория -->
                 {% if news_item.category %}
                 <div class="mb-4">
                     <span class="badge bg-info">
@@ -42,7 +62,7 @@
                 </div>
                 {% endif %}
 
-                <!-- Содержание -->
+                <!-- Содержание новости -->
                 <div class="mb-4">
                     {{ news_item.content|linebreaks }}
                 </div>
@@ -65,9 +85,13 @@
                     </a>
 
                     <div>
+                        <!-- Кнопка редактирования (Вариант 14) -->
+                        <a href="{% url 'lex:edit_news' news_item.id %}" class="btn btn-warning">
+                            ✏️ Редактировать новость
+                        </a>
                         <a href="/admin/lex/news/{{ news_item.id }}/change/"
-                           class="btn btn-warning" target="_blank">
-                            ✏️ Редактировать
+                           class="btn btn-outline-secondary" target="_blank">
+                            ⚙️ Админка
                         </a>
                         <a href="{% url 'lex:index' %}" class="btn btn-primary ms-2">
                             🏠 На главную
@@ -76,30 +100,6 @@
                 </div>
             </div>
         </div>
-    </div>
-</div>
-
-<!-- Breadcrumbs (хлебные крошки) для лабораторной работы №10 -->
-<div class="row mt-3">
-    <div class="col-md-12">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a href="{% url 'lex:index' %}">Главная</a>
-                </li>
-                <li class="breadcrumb-item">
-                    <a href="{% url 'lex:news_list' %}">Новости</a>
-                </li>
-                {% if news_item.category %}
-                <li class="breadcrumb-item">
-                    <a href="{{ news_item.category.get_absolute_url }}">{{ news_item.category.name }}</a>
-                </li>
-                {% endif %}
-                <li class="breadcrumb-item active" aria-current="page">
-                    {{ news_item.title|truncatechars:50 }}
-                </li>
-            </ol>
-        </nav>
     </div>
 </div>
 {% endblock %}
