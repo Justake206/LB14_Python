@@ -1,0 +1,136 @@
+<!-- lex/templates/lex/edit_news.html -->
+{% extends 'lex/base.html' %}
+{% load lex_tags %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block header %}✏️ {{ title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="card-title mb-0">Редактирование новости</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <!-- Вывод ошибок формы (общие) -->
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Поле: Заголовок -->
+                    <div class="mb-3">
+                        <label class="form-label">Заголовок новости</label>
+                        <input type="text" name="title" value="{{ form.title.value|default:'' }}"
+                               class="form-control {% if form.title.errors %}is-invalid{% endif %}">
+                        {% if form.title.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.title.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Поле: Категория -->
+                    <div class="mb-3">
+                        <label class="form-label">Категория</label>
+                        <select name="category" class="form-select {% if form.category.errors %}is-invalid{% endif %}">
+                            <option value="">Выберите категорию</option>
+                            {% for category in form.category.field.queryset %}
+                            <option value="{{ category.id }}" {% if form.category.value == category.id %}selected{% endif %}>
+                                {{ category.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        {% if form.category.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.category.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Поле: Содержание -->
+                    <div class="mb-3">
+                        <label class="form-label">Содержание новости</label>
+                        <textarea name="content" rows="10"
+                                  class="form-control {% if form.content.errors %}is-invalid{% endif %}">{{ form.content.value|default:'' }}</textarea>
+                        {% if form.content.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.content.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Поле: Изображение -->
+                    <div class="mb-3">
+                        <label class="form-label">Изображение</label>
+                        {% if news_item.photo %}
+                        <div class="mb-2">
+                            <img src="{{ news_item.photo.url }}" alt="Текущее изображение"
+                                 style="max-height: 100px; max-width: 200px;" class="img-thumbnail">
+                            <p class="small text-muted mt-1">Текущее изображение</p>
+                        </div>
+                        {% endif %}
+                        <input type="file" name="photo" class="form-control">
+                        {% if form.photo.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.photo.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <div class="form-text">Выберите новое изображение (опционально)</div>
+                    </div>
+
+                    <!-- Поле: Опубликовано -->
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" name="is_published" class="form-check-input"
+                               {% if form.is_published.value %}checked{% endif %}>
+                        <label class="form-check-label">Опубликовано</label>
+                        {% if form.is_published.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.is_published.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Кнопки -->
+                    <div class="d-flex justify-content-between">
+                        <button type="submit" class="btn btn-primary">
+                            💾 Сохранить изменения
+                        </button>
+                        <a href="{% url 'lex:news_detail' news_item.id %}" class="btn btn-secondary">
+                            ❌ Отмена
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Информация о новости -->
+        <div class="card mt-3">
+            <div class="card-body">
+                <p class="text-muted mb-0 small">
+                    <strong>Дата создания:</strong> {{ news_item.created_at|date:"d.m.Y H:i" }}<br>
+                    <strong>ID новости:</strong> {{ news_item.id }}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

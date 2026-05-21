@@ -1,0 +1,119 @@
+<!-- lex/templates/lex/add_news.html -->
+{% extends 'lex/base.html' %}
+{% load lex_tags %}
+
+{% block title %}Добавление новости{% endblock %}
+{% block header %}➕ Добавление новости{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">Создание новой новости</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <!-- Общие ошибки формы -->
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Поле: Заголовок -->
+                    <div class="mb-3">
+                        <label class="form-label">Заголовок новости <span class="text-danger">*</span></label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.title.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <div class="form-text">Введите уникальный заголовок новости</div>
+                    </div>
+
+                    <!-- Поле: Категория -->
+                    <div class="mb-3">
+                        <label class="form-label">Категория</label>
+                        {{ form.category }}
+                        {% if form.category.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.category.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Поле: Содержание -->
+                    <div class="mb-3">
+                        <label class="form-label">Содержание новости <span class="text-danger">*</span></label>
+                        {{ form.content }}
+                        {% if form.content.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.content.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Поле: Изображение -->
+                    <div class="mb-3">
+                        <label class="form-label">Изображение</label>
+                        {{ form.photo }}
+                        {% if form.photo.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.photo.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <div class="form-text">Поддерживаемые форматы: JPG, PNG, GIF</div>
+                    </div>
+
+                    <!-- Поле: Опубликовано -->
+                    <div class="mb-3 form-check">
+                        {{ form.is_published }}
+                        <label class="form-check-label">Опубликовать сразу</label>
+                        {% if form.is_published.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.is_published.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Кнопки -->
+                    <div class="d-flex justify-content-between">
+                        <button type="submit" class="btn btn-success">
+                            Добавить новость
+                        </button>
+                        <a href="{% url 'lex:index' %}" class="btn btn-secondary">
+                            Отмена
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Информация -->
+        <div class="card mt-3">
+            <div class="card-body">
+                <p class="text-muted mb-0 small">
+                    <strong>Примечание:</strong> Поля, отмеченные знаком *, обязательны для заполнения.
+                    Заголовок новости должен быть уникальным.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
