@@ -6,9 +6,9 @@ app_name = 'lex'
 
 urlpatterns = [
     # ============================================
-    # ОСНОВНЫЕ МАРШРУТЫ
+    # ОСНОВНЫЕ МАРШРУТЫ (ПРЕДСТАВЛЕНИЯ НА ОСНОВЕ КЛАССОВ)
     # ============================================
-    path('', views.index, name='index'),
+    path('', views.HomeNews.as_view(), name='index'),
     path('test/', views.test, name='test'),
     path('about/', views.about, name='about'),
 
@@ -16,13 +16,18 @@ urlpatterns = [
     # МАРШРУТЫ ДЛЯ НОВОСТЕЙ
     # ============================================
     path('news/', views.news_list, name='news_list'),
-    path('news/<int:news_id>/', views.news_detail, name='news_detail'),
-    path('news/category/<int:category_id>/', views.news_by_category, name='news_by_category'),
+    path('news/<int:pk>/', views.ViewNews.as_view(), name='news_detail'),
+    path('news/category/<int:category_id>/', views.NewsByCategory.as_view(), name='news_by_category'),
 
     # ============================================
-    # ВАРИАНТ 14: РЕДАКТИРОВАНИЕ НОВОСТИ
+    # РЕДАКТИРОВАНИЕ НОВОСТИ (ИЗ ЛАБОРАТОРНОЙ №11)
     # ============================================
     path('news/edit/<int:news_id>/', views.edit_news, name='edit_news'),
+
+    # ============================================
+    # ДОБАВЛЕНИЕ НОВОСТИ (CREATEVIEW - ЛАБОРАТОРНАЯ №12)
+    # ============================================
+    path('news/add/', views.CreateNews.as_view(), name='add_news'),
 
     # ============================================
     # МАРШРУТЫ ДЛЯ СУДЕБНЫХ ДЕЛ
@@ -41,13 +46,13 @@ urlpatterns = [
     path('api/cases/<int:case_id>/', views.api_case_detail, name='api_case_detail'),
 
     # ============================================
-    # ТЕСТОВЫЕ МАРШРУТЫ (ЛАБОРАТОРНАЯ 6)
+    # ТЕСТОВЫЕ МАРШРУТЫ
     # ============================================
     path('test/bootstrap/', views.test_bootstrap, name='test_bootstrap'),
     path('test/template-tags/', views.test_template_tags, name='test_template_tags'),
 
     # ============================================
-    # РЕДИРЕКТЫ (ЗАДАНИЕ 9)
+    # РЕДИРЕКТЫ
     # ============================================
     path('go-to-category/<int:category_id>/', views.redirect_to_category, name='go_to_category'),
     path('go-to-news/<int:news_id>/', views.redirect_to_news, name='go_to_news'),

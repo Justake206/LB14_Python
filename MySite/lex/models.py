@@ -1,6 +1,6 @@
 # lex/models.py
 from django.db import models
-from django.urls import reverse  # НОВЫЙ ИМПОРТ для обратного разрешения URL
+from django.urls import reverse
 
 # Create your models here.
 
@@ -21,12 +21,10 @@ class PracticeArea(models.Model):
     def __str__(self):
         return self.name
 
-    # метод для лабораторной работы 10
     def get_absolute_url(self):
         """
         Метод обратного разрешения URL для категории.
         Возвращает URL на страницу новостей этой категории.
-        Используется в шаблонах вместо тега {% url %}.
         """
         return reverse('lex:news_by_category', kwargs={'category_id': self.pk})
 
@@ -143,16 +141,15 @@ class News(models.Model):
     def __str__(self):
         return self.title
 
-    # новый метод для лб 10
     def get_absolute_url(self):
         """
         Метод обратного разрешения URL для новости.
         Возвращает URL на детальную страницу новости.
-        Используется в шаблонах вместо тега {% url %}.
+        ВАЖНО: используем 'pk', так как в urls.py используется <int:pk>
         """
-        return reverse('lex:news_detail', kwargs={'news_id': self.pk})
+        return reverse('lex:news_detail', kwargs={'pk': self.pk})
 
-    # Методы для использования в шаблонах (из лабораторной 6)
+    # Методы для использования в шаблонах
     def get_short_title(self):
         """Метод для получения сокращенного заголовка (первые 30 символов)"""
         if len(self.title) > 30:
