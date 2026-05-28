@@ -2,6 +2,7 @@
 from django.db import models
 from django.urls import reverse
 
+
 # Create your models here.
 
 class PracticeArea(models.Model):
@@ -17,15 +18,19 @@ class PracticeArea(models.Model):
         blank=True,
         verbose_name='Описание области практики'
     )
+    # Добавляем поле slug для задания 2
+    slug = models.SlugField(
+        max_length=150,
+        unique=True,
+        blank=True,
+        null=True,
+        verbose_name='URL-метка (slug)'
+    )
 
     def __str__(self):
         return self.name
 
     def get_absolute_url(self):
-        """
-        Метод обратного разрешения URL для категории.
-        Возвращает URL на страницу новостей этой категории.
-        """
         return reverse('lex:news_by_category', kwargs={'category_id': self.pk})
 
     class Meta:
@@ -92,11 +97,9 @@ class Case(models.Model):
         return f"{self.case_number}: {self.title}"
 
     def get_case_info(self):
-        """Возвращает краткую информацию о деле"""
         return f"Дело №{self.case_number} - {self.client}"
 
     def get_status_color(self):
-        """Возвращает цвет статуса для Bootstrap"""
         colors = {
             'active': 'success',
             'closed': 'secondary',
@@ -121,7 +124,9 @@ class News(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
     is_published = models.BooleanField(default=True, verbose_name='Опубликовано')
 
-    # Поле для изображения
+    # НОВОЕ ПОЛЕ для задания 4
+    views = models.IntegerField(default=0, verbose_name='Количество просмотров')
+
     photo = models.ImageField(
         upload_to='news_photos/%Y/%m/%d/',
         blank=True,
@@ -129,7 +134,6 @@ class News(models.Model):
         verbose_name='Изображение новости'
     )
 
-    # Связь с PracticeArea (категория новости)
     category = models.ForeignKey(
         PracticeArea,
         on_delete=models.SET_NULL,
@@ -142,39 +146,28 @@ class News(models.Model):
         return self.title
 
     def get_absolute_url(self):
-        """
-        Метод обратного разрешения URL для новости.
-        Возвращает URL на детальную страницу новости.
-        ВАЖНО: используем 'pk', так как в urls.py используется <int:pk>
-        """
         return reverse('lex:news_detail', kwargs={'pk': self.pk})
 
-    # Методы для использования в шаблонах
     def get_short_title(self):
-        """Метод для получения сокращенного заголовка (первые 30 символов)"""
         if len(self.title) > 30:
             return self.title[:27] + '...'
         return self.title
 
     def get_news_type(self):
-        """Метод для определения типа новости по категории"""
         if self.category:
             return f"Категория: {self.category.name}"
         return "Общие новости"
 
     def has_photo(self):
-        """Проверяет, есть ли у новости изображение"""
         return bool(self.photo)
 
     def get_content_preview(self, words=50):
-        """Возвращает превью контента (первые words слов)"""
         words_list = self.content.split()
         if len(words_list) > words:
             return ' '.join(words_list[:words]) + '...'
         return self.content
 
     def days_since_publication(self):
-        """Возвращает количество дней с момента публикации"""
         from django.utils import timezone
         delta = timezone.now() - self.created_at
         return delta.days
@@ -183,3 +176,46 @@ class News(models.Model):
         verbose_name = 'Новость'
         verbose_name_plural = 'Новости'
         ordering = ['-created_at']
+
+
+class Comment(models.Model):
+    """
+    НОВАЯ МОДЕЛЬ для комментариев к новостям
+    Нужна для задания 5 (подсчёт минимального рейтинга комментариев)
+    """
+    news = models.ForeignKey(
+        News,
+        on_delete=models.CASCADE,
+        related_name='comments',
+        verbose_name='Новость'
+    )
+    author = models.CharField(
+        max_length=100,
+        verbose_name='Автор комментария'
+    )
+    email = models.EmailField(
+        blank=True,
+        null=True,
+        verbose_name='Email автора'
+    )
+    text = models.TextField(verbose_name='Текст комментария')
+    rating = models.IntegerField(
+        default=0,
+        verbose_name='Рейтинг комментария'
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Дата создания'
+    )
+    is_moderated = models.BooleanField(
+        default=True,
+        verbose_name='Промодерировано'
+    )
+
+    def __str__(self):
+        return f"Комментарий от {self.author} к новости '{self.news.title[:30]}'"
+
+    class Meta:
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'
+        ordering = ['-created_at']n
