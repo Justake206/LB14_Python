@@ -85,7 +85,6 @@
                     </a>
 
                     <div>
-                        <!-- Кнопка редактирования (Вариант 14) -->
                         <a href="{% url 'lex:edit_news' news_item.id %}" class="btn btn-warning">
                             ✏️ Редактировать новость
                         </a>
@@ -98,6 +97,44 @@
                         </a>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- БЛОК КОММЕНТАРИЕВ (ДОБАВЛЕНО ДЛЯ ЛБ14) -->
+        <!-- ============================================ -->
+        <div class="card mt-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="card-title mb-0">💬 Комментарии ({{ news_item.comments.count }})</h5>
+            </div>
+            <div class="card-body">
+                {% if news_item.comments.all %}
+                    {% for comment in news_item.comments.all %}
+                    <div class="border-bottom pb-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ comment.author }}</strong>
+                                <span class="text-muted small ms-2">
+                                    {{ comment.created_at|date:"d.m.Y H:i" }}
+                                </span>
+                            </div>
+                            <div>
+                                {% if comment.is_moderated %}
+                                <span class="badge bg-success">Одобрен</span>
+                                {% else %}
+                                <span class="badge bg-warning">На модерации</span>
+                                {% endif %}
+                                <span class="badge bg-info ms-1">⭐ Рейтинг: {{ comment.rating }}</span>
+                            </div>
+                        </div>
+                        <p class="mt-2 mb-0">{{ comment.text|linebreaks }}</p>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center mb-0">
+                        Комментариев пока нет. Будьте первым, кто оставит комментарий!
+                    </p>
+                {% endif %}
             </div>
         </div>
     </div>
