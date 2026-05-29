@@ -19,4 +19,4 @@ class CustomAdminSite(AdminSite):
 
 
 # Создаём экземпляр кастомного админ-сайта
-custom_admin_site = CustomAdminSite(name='lex_admin')
+custom_admin_site = CustomAdminSite(name='lex_admin') #111
