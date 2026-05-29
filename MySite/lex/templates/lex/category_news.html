@@ -24,89 +24,126 @@
 </div>
 
 {% if news_list %}
+<!-- СЕТКА НОВОСТЕЙ -->
 <div class="row">
     {% for news in news_list %}
     <div class="col-md-6 mb-4">
-        <div class="card h-100 news-card">
+        <div class="card h-100">
             <div class="card-header bg-{% cycle 'primary' 'success' 'info' 'warning' %} text-white">
                 <h5 class="card-title mb-0">
                     {{ forloop.counter }}. {{ news.title|truncatechars:50 }}
                 </h5>
             </div>
-
             <div class="card-body">
                 <p class="card-text text-muted small">
                     📅 {{ news.created_at|date:"d.m.Y H:i" }}
                 </p>
-
                 <p class="card-text">
                     {{ news.content|truncatewords:30|linebreaks }}
                 </p>
-
                 {% if news.get_short_title %}
                 <p class="card-text small text-muted">
                     Кратко: {{ news.get_short_title }}
                 </p>
                 {% endif %}
             </div>
-
             <div class="card-footer">
-                <div class="d-flex justify-content-between align-items-center">
-                    <!-- ИЗМЕНЕНО: используем get_absolute_url -->
-                    <a href="{{ news.get_absolute_url }}" class="btn btn-primary btn-sm">
-                        📖 Читать далее
-                    </a>
-
-                    {% if news.has_photo %}
-                    <span class="badge bg-info">📷 С фото</span>
-                    {% endif %}
-                </div>
+                <a href="{{ news.get_absolute_url }}" class="btn btn-primary btn-sm">
+                    📖 Читать далее
+                </a>
+                {% if news.has_photo %}
+                <span class="badge bg-info ms-2">📷 С фото</span>
+                {% endif %}
             </div>
         </div>
     </div>
     {% endfor %}
 </div>
 
-<!-- Пагинация -->
-{% if paginator.num_pages > 1 %}
-<nav aria-label="Навигация по страницам">
+<!-- ============================================ -->
+<!-- ПАГИНАЦИЯ С СОХРАНЕНИЕМ ТЕКУЩЕЙ СТРАНИЦЫ В URL -->
+<!-- ============================================ -->
+{% if page_obj.has_other_pages %}
+<nav aria-label="Page navigation" class="mt-4">
     <ul class="pagination justify-content-center">
-        {% if news_list.has_previous %}
+        <!-- Первая страница -->
+        {% if page_obj.has_previous %}
         <li class="page-item">
-            <a class="page-link" href="?page={{ news_list.previous_page_number }}">← Назад</a>
+            <a class="page-link" href="?page=1">&laquo; Первая</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link">&laquo; Первая</span>
         </li>
         {% endif %}
 
-        <li class="page-item disabled">
-            <span class="page-link">
-                Страница {{ news_list.number }} из {{ paginator.num_pages }}
-            </span>
-        </li>
-
-        {% if news_list.has_next %}
+        <!-- Предыдущая страница -->
+        {% if page_obj.has_previous %}
         <li class="page-item">
-            <a class="page-link" href="?page={{ news_list.next_page_number }}">Вперед →</a>
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                ← Предыдущая
+            </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link">← Предыдущая</span>
+        </li>
+        {% endif %}
+
+        <!-- Номера страниц (показываем 3 до и 3 после текущей) -->
+        {% for p in page_obj.paginator.page_range %}
+            {% if p == page_obj.number %}
+            <li class="page-item active" aria-current="page">
+                <span class="page-link">{{ p }}</span>
+            </li>
+            {% elif p > page_obj.number|add:'-3' and p < page_obj.number|add:'3' %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ p }}">{{ p }}</a>
+            </li>
+            {% endif %}
+        {% endfor %}
+
+        <!-- Следующая страница -->
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                Следующая →
+            </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link">Следующая →</span>
+        </li>
+        {% endif %}
+
+        <!-- Последняя страница -->
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
+                Последняя &raquo;
+            </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link">Последняя &raquo;</span>
         </li>
         {% endif %}
     </ul>
 </nav>
+
+<!-- Информация о текущей странице -->
+<div class="text-center text-muted mt-2">
+    <small>Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</small>
+</div>
 {% endif %}
 
 {% else %}
-<div class="row">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-body text-center py-5">
-                <h3 class="text-muted mb-3">Новостей в категории "{{ category.name }}" пока нет</h3>
-                <p class="lead mb-4">
-                    Добавьте новости через админ-панель
-                </p>
-                <a href="/admin/lex/news/add/" class="btn btn-primary" target="_blank">
-                    ➕ Добавить новость
-                </a>
-            </div>
-        </div>
-    </div>
+<!-- НЕТ НОВОСТЕЙ -->
+<div class="alert alert-warning text-center">
+    <p>Новостей в категории "{{ category.name }}" пока нет.</p>
+    <a href="/admin/lex/news/add/" class="btn btn-primary" target="_blank">
+        ➕ Добавить новость
+    </a>
 </div>
 {% endif %}
 {% endblock %}

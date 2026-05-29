@@ -1,10 +1,13 @@
+# MySite/urls.py
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.http import HttpResponse
-#тест кастомной страницы
 from django.conf.urls import handler404
+
+# Импорт кастомного AdminSite (для продвинутого уровня ЛБ14)
+from lex.admin_site import custom_admin_site
 
 # Кастомная страница 404
 handler404 = 'lex.views.custom_404'
@@ -43,7 +46,7 @@ def home(request):
             <h2>📱 Приложения:</h2>
             <ul>
                 <li><a href="/lex/">🏠 Приложение Lex</a></li>
-                <li><a href="/admin/">⚙️ Админ-панель</a></li>
+                <li><a href="/lex-admin/">🎨 Кастомная админ-панель</a></li>
             </ul>
         </div>
 
@@ -54,6 +57,7 @@ def home(request):
                 <li><a href="/lex/test/">🧪 Тестовая страница</a></li>
                 <li><a href="/lex/about/">ℹ️ О нас</a></li>
                 <li><a href="/lex/news/">📰 Список новостей</a></li>
+                <li><a href="/lex/news/add/">➕ Добавить новость</a></li>
             </ul>
         </div>
     </body>
@@ -62,14 +66,34 @@ def home(request):
 
 
 urlpatterns = [
+    # Админ-панели
     path('admin/', admin.site.urls),
+    path('lex-admin/', custom_admin_site.urls),
+
+    # Приложение Lex
     path('lex/', include('lex.urls')),
+
+    # Главная страница
     path('', home, name='home'),
 ]
 
-# Добавление маршрутов для медиа-файлов в режиме разработки
-# Это позволяет Django обслуживать загруженные пользователем файлы (изображения)
+# ============================================
+# НАСТРОЙКА ДЛЯ РЕЖИМА ОТЛАДКИ (DEBUG = True)
+# ============================================
+
 if settings.DEBUG:
+    # Django Debug Toolbar - ОТКЛЮЧЕН
+    # (раскомментируйте если понадобится)
+    # try:
+    #     import debug_toolbar
+    #     urlpatterns = [
+    #         path('__debug__/', include(debug_toolbar.urls)),
+    #     ] + urlpatterns
+    # except ImportError:
+    #     pass
+
+    # Обслуживание медиа-файлов
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    # Также добавляем статические файлы (хотя collectstatic лучше для продакшена)
+
+    # Обслуживание статических файлов
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

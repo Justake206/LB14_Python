@@ -6,29 +6,35 @@ from django.urls import reverse_lazy
 from django.core.paginator import Paginator
 from .models import Case, PracticeArea, News
 from .forms import NewsForm
+from .mixins import PaginationMixin  # Миксин для пагинации (ЛБ14)
 
 
 # ============================================
 # ПРЕДСТАВЛЕНИЯ НА ОСНОВЕ КЛАССОВ (CBV)
 # ============================================
 
-class HomeNews(ListView):
+class HomeNews(PaginationMixin, ListView):
     """
     Главная страница - список последних новостей.
     Заменяет функцию index().
+    Оптимизировано с select_related (ЛБ14).
+    Добавлена пагинация (ЛБ14).
     """
     model = News
     template_name = 'lex/index.html'
     context_object_name = 'latest_news'
-    extra_context = {'title': 'Главная страница - Lex'}
+    paginate_by = 8  # 8 новостей на страницу (ЛБ14)
 
     def get_queryset(self):
-        """Возвращает только опубликованные новости, последние 3"""
-        return News.objects.filter(is_published=True).order_by('-created_at')[:3]
+        """Возвращает только опубликованные новости с подгрузкой категории"""
+        return News.objects.filter(
+            is_published=True
+        ).select_related('category').order_by('-created_at')
 
     def get_context_data(self, **kwargs):
         """Добавляет статистику в контекст шаблона"""
         context = super().get_context_data(**kwargs)
+        context['title'] = 'Главная страница - Lex'
         context['cases_count'] = Case.objects.count()
         context['practice_areas_count'] = PracticeArea.objects.count()
         context['news_count'] = News.objects.filter(is_published=True).count()
@@ -39,10 +45,18 @@ class ViewNews(DetailView):
     """
     Детальная страница новости.
     Заменяет функцию news_detail().
+    Оптимизировано с select_related и prefetch_related (ЛБ14).
     """
     model = News
     template_name = 'lex/news_detail.html'
     context_object_name = 'news_item'
+
+    def get_object(self, queryset=None):
+        """
+        Получает новость с подгрузкой категории и комментариев.
+        Оптимизация SQL-запросов (ЛБ14).
+        """
+        return News.objects.select_related('category').prefetch_related('comments').get(pk=self.kwargs['pk'])
 
     def get_context_data(self, **kwargs):
         """Добавляет заголовок страницы"""
@@ -51,15 +65,17 @@ class ViewNews(DetailView):
         return context
 
 
-class NewsByCategory(ListView):
+class NewsByCategory(PaginationMixin, ListView):
     """
     Список новостей по категории.
     Заменяет функцию news_by_category().
+    Оптимизировано с select_related (ЛБ14).
+    Добавлена пагинация (ЛБ14).
     """
     model = News
     template_name = 'lex/category_news.html'
     context_object_name = 'news_list'
-    paginate_by = 6
+    paginate_by = 6  # 6 новостей на страницу
     allow_empty = True
 
     def get_queryset(self):
@@ -68,7 +84,7 @@ class NewsByCategory(ListView):
         return News.objects.filter(
             category=self.category,
             is_published=True
-        ).order_by('-created_at')
+        ).select_related('category').order_by('-created_at')
 
     def get_context_data(self, **kwargs):
         """Добавляет данные о категории в контекст"""
@@ -83,8 +99,7 @@ class NewsByCategory(ListView):
 class CreateNews(CreateView):
     """
     Форма добавления новости.
-    ВАРИАНТ 14: проверка уникальности заголовка.
-    Заменяет функцию add_news().
+    ВАРИАНТ 14 (ЛБ11-12): проверка уникальности заголовка.
     """
     form_class = NewsForm
     template_name = 'lex/add_news.html'
@@ -114,7 +129,7 @@ def news_list(request):
     Список всех новостей с пагинацией.
     """
     # Получаем только опубликованные новости
-    news_items = News.objects.filter(is_published=True).order_by('-created_at')
+    news_items = News.objects.filter(is_published=True).select_related('category').order_by('-created_at')
 
     # Пагинация - 6 новостей на страницу
     paginator = Paginator(news_items, 6)

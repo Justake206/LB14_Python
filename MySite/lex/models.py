@@ -18,7 +18,7 @@ class PracticeArea(models.Model):
         blank=True,
         verbose_name='Описание области практики'
     )
-    # Добавляем поле slug для задания 2
+    # Поле slug для задания 2
     slug = models.SlugField(
         max_length=150,
         unique=True,
@@ -124,7 +124,7 @@ class News(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
     is_published = models.BooleanField(default=True, verbose_name='Опубликовано')
 
-    # НОВОЕ ПОЛЕ для задания 4
+    # Поле для количества просмотров (ЛБ13)
     views = models.IntegerField(default=0, verbose_name='Количество просмотров')
 
     photo = models.ImageField(
@@ -180,8 +180,7 @@ class News(models.Model):
 
 class Comment(models.Model):
     """
-    НОВАЯ МОДЕЛЬ для комментариев к новостям
-    Нужна для задания 5 (подсчёт минимального рейтинга комментариев)
+    Модель для комментариев к новостям (ЛБ13)
     """
     news = models.ForeignKey(
         News,
@@ -213,9 +212,9 @@ class Comment(models.Model):
     )
 
     def __str__(self):
-        return f"Комментарий от {self.author} к новости '{self.news.title[:30]}'"
+        return f"Комментарий от {self.author}"
 
     class Meta:
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
-        ordering = ['-created_at']n
+        ordering = ['-created_at']
